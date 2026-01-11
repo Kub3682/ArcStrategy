@@ -75,3 +75,47 @@ AUTOSAR MCAL 层设计的 3 个核心思想：
 > | MCAL     | dio        | IO 驱动抽象接口设计，隔离驱动库函数                    |
 > | LED      | led_ctrl   | LED 控制逻辑与规则                                     |
 > | 主调度层 | core0_main | 系统初始化与调度，主循环调度（应用实现的任务集成管理） |
+
+> 补充说明：AUTOSAR 规范中，应用层模块（如 LED 控制模块）必须是 “自治的”—— 即模块需包含自身的初始化、运行、销毁逻辑，系统集成层仅负责调用模块的标准化接口，而非介入模块的业务细节。
+
+### 总结：
+
+- 若 LED / 按键引脚变更：仅修改 port_cfg.h 中的 LED1_PORT/PIN、BUTTON_PORT/PIN，其余代码无需改动；
+- 若切换控制模式：修改 led_ctrl.h 中的 LED_CTL_TYPE（0 = 常亮，1 = 闪烁）；
+- 若迁移到其他 AUTOSAR 兼容 MCU：仅需修改 port_cfg.c（Port 驱动实现）和 dio.c（转换函数），上层业务逻辑完全复用。
+
+- 彻底解耦：上层（主函数 / 业务逻辑）无任何 IfxPort.h 依赖，底层硬件变更不影响上层；
+- 性能最优：转换函数采用 static inline，编译后无函数调用开销，等同于宏定义；
+- 类型安全：自定义 Dio_StateType 枚举，编译器严格校验，避免非法电平值；
+- 符合 AUTOSAR：严格遵循 “Port 配置硬件、DIO 操作功能、应用层实现业务” 的分层职责。
+
+> 补充说明：单独拆分 dio_types.h 的核心目标是：让 “类型定义” 与 “接口声明” 解耦，最小化上层模块的依赖范围，同时适配 AUTOSAR 对 “MCAL 层类型标准化” 的要求。如果把类型直接写入 dio.h，会导致上层模块 “被迫依赖不必要的接口声明”，违背 “最小依赖原则”。SOLID 中的接口隔离原则（Interface Segregation Principle）核心是：
+> 客户端不应该依赖它不需要的接口；类之间的依赖应该建立在最小的接口上。
+> 这里的 “接口” 不只是 C 语言中的函数接口，还包括头文件暴露的 “抽象契约”（类型、宏、函数声明的集合）；“客户端” 就是引用头文件的上层模块（如 led_ctrl.c、state_monitor.c）。
+
+> 假设我们将 Dio_StateType 直接写入 dio.h，代码如下：
+
+```c
+// 混写后的dio.h
+#ifndef DIO_H
+#define DIO_H
+
+// 类型+接口混写
+typedef enum
+{
+    DIO_STATE_LOW  = 0U,
+    DIO_STATE_HIGH = 1U
+} Dio_StateType;
+
+#include "port_cfg.h"
+void Dio_WritePin(Ifx_P *port, uint8_t pin, Dio_StateType state);
+Dio_StateType Dio_ReadPin(Ifx_P *port, uint8_t pin);
+
+#endif /* DIO_H */
+```
+
+> 此时会出现 3 个核心问题：
+
+> 1. 依赖膨胀：上层模块仅需 Dio_StateType 时，必须包含 dio.h，进而间接包含 port_cfg.h（引脚宏定义），导致 “类型依赖” 变成 “接口 + 硬件配置依赖”；
+> 2. 编译效率低：dio.h 的任何变更（比如接口参数调整），都会让所有引用 Dio_StateType 的模块重新编译；
+> 3. 不符合 AUTOSAR 规范：无法对接 AUTOSAR 工具链，也不符合行业通用的 MCAL 代码结构，不利于团队协作（其他开发者需重新适应非标准结构）。
