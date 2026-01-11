@@ -3,7 +3,8 @@
 #include "dio_types.h"
 
 // 常亮灯效实现（仅依赖led_dd的抽象接口）
-void LightFun_AlwaysOn(void)
+
+void LightFunc_AlwaysOn(void)
 {
-    Led_DD_SetState(DIO_STATE_LOW);  // LED亮
+    Led_DD_SetState(DIO_STATE_LOW);
 }

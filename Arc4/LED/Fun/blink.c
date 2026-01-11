@@ -12,10 +12,13 @@ static void DelayMs(uint32_t ms)
 }
 
 // 闪烁灯效实现（仅依赖led_dd的抽象接口）
-void LightFun_Blink(void)
+
+void LightFunc_Blink(void)
 {
-    Led_DD_SetState(DIO_STATE_LOW);  // 亮
+    // 亮200ms
+    Led_DD_SetState(DIO_STATE_LOW);
     DelayMs(200);
-    Led_DD_SetState(DIO_STATE_HIGH); // 灭
+    // 灭200ms
+    Led_DD_SetState(DIO_STATE_HIGH);
     DelayMs(200);
 }
