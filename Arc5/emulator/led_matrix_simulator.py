@@ -12,6 +12,7 @@ class LEDMatrixSimulator:
         self.led_count = 8  # 8个LED
         self.is_running = False  # 开关状态
         self.current_vector = np.array([[1, 0, 0, 0, 0, 0, 0, 0]])  # 初始向量（第1个LED亮）
+        '''
         # 默认循环移位矩阵（可自定义修改）
         self.shift_matrix = np.array([
             [0, 1, 0, 0, 0, 0, 0, 0],
@@ -23,6 +24,19 @@ class LEDMatrixSimulator:
             [0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0]
         ])
+        '''
+        # 自定义矩阵示例：波涛汹涌
+        self.shift_matrix = np.array([
+            [0, 1, 0, 0, 0, 0, 0, 1],  # LED1亮 → 带动LED2、LED8亮
+            [1, 0, 1, 0, 0, 0, 0, 0],  # LED2亮 → 带动LED1、LED3亮
+            [0, 1, 0, 1, 0, 0, 0, 0],  # LED3亮 → 带动LED2、LED4亮
+            [0, 0, 1, 0, 1, 0, 0, 0],  # LED4亮 → 带动LED3、LED5亮
+            [0, 0, 0, 1, 0, 1, 0, 0],  # LED5亮 → 带动LED4、LED6亮
+            [0, 0, 0, 0, 1, 0, 1, 0],  # LED6亮 → 带动LED5、LED7亮
+            [0, 0, 0, 0, 0, 1, 0, 1],  # LED7亮 → 带动LED6、LED8亮
+            [1, 0, 0, 0, 0, 0, 1, 0]   # LED8亮 → 带动LED1、LED7亮
+        ])
+
         
         # 2. 创建GUI组件
         self._create_gui()
@@ -77,6 +91,7 @@ class LEDMatrixSimulator:
             for led in self.led_frames:
                 led.config(bg="gray")
 
+    '''
     def _update_leds(self):
         # 核心：向量 × 矩阵 计算新状态
         if self.is_running:
@@ -90,6 +105,24 @@ class LEDMatrixSimulator:
                 self.led_frames[i].config(bg="green" if state == 1 else "gray")
         
         # 定时刷新（200ms一次，可调整速度）
+        self.root.after(200, self._update_leds)
+        '''
+    
+    def _update_leds(self):
+        if self.is_running:
+            # 转换为布尔矩阵运算（True=亮，False=灭）
+            bool_vector = self.current_vector.astype(bool)
+            bool_matrix = self.shift_matrix.astype(bool)
+            # 布尔矩阵乘法（逻辑或求和，等价于点积后>0）
+            new_bool_vector = np.dot(bool_vector, bool_matrix).astype(bool)
+            # 转回0/1整数向量
+            self.current_vector = new_bool_vector.astype(int)
+            # 更新显示
+            led_states = self.current_vector[0]
+            
+            for i, state in enumerate(led_states):
+                self.led_frames[i].config(bg="green" if state == 1 else "gray")
+        
         self.root.after(200, self._update_leds)
 
 if __name__ == "__main__":
