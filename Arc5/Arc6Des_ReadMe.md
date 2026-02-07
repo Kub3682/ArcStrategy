@@ -40,7 +40,7 @@
 
 如截图所示：
 
-![IFX多核启动代码目录结构](./images6/IFX-SSW.png)
+![IFX多核启动代码目录结构](./images5/IFX-SSW.png)
 Core1 的启动入口已定义（硬件级触发）
 代码末尾的\_START1(void)函数是 Core1 的复位向量入口（绑定到.start_cpu1段），TC499 硬件复位后，Core1 会优先执行该函数：
 
