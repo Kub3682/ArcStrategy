@@ -2,6 +2,7 @@
 #define LED_CTRL_H
 
 
+#include "lightfun.h"
 /**
  * LED模块初始化接口
  * 包含LED初始状态设置、硬件适配等所有LED初始化逻辑
