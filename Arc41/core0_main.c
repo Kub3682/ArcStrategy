@@ -8,8 +8,9 @@ void core0_main(void)
     // 1. 硬件初始化（Port驱动优先初始化，符合AUTOSAR [SWS_Port_00078]）
     Port_Cfg_Init();
     
-    // 2. LED模块初始化（集成工程师仅需调用接口，无需关心内部逻辑）
-    Led_Ctrl_Init();
+    // 2. LED模块初始化（集成工程师仅需调用接口，同时确认关键配置型号，无需关心内部逻辑）
+    //Led_Ctrl_Init();
+    Led_Ctrl_Init(&LuxuryCarConfig);
 
     // 3. 主循环调度业务逻辑
     while (1)

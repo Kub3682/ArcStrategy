@@ -112,3 +112,32 @@ void core0_main(void) {
 }
 
 ```
+
+> 进阶：如何让“车型选择”也变成更灵活的架构范式？
+> 在 main.c 中根据硬件 ID 动态注入车型配置。
+
+```c
+
+/* main.c 执行范式示例 */
+void core0_main(void)
+{
+    const CarModelConfig* selectedCfg;
+
+    // 思维范式：从硬件或跳线读取车型 ID
+    uint8_t modelId = Hardware_ReadModelID();
+
+    if (modelId == 0x01) {
+        selectedCfg = &LuxuryCarConfig;
+    } else {
+        selectedCfg = &BasicCarConfig;
+    }
+
+    // 注入执行范式
+    Led_Ctrl_Init(selectedCfg);
+
+    while(1) {
+        Led_Ctrl_Handle();
+    }
+}
+
+```
