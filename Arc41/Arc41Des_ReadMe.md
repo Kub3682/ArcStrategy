@@ -69,3 +69,46 @@ void Led_Ctrl_Handle(void) {
 }
 
 ```
+
+> 应用：核心控制逻辑通用化
+> 注意：比如为了执行 Blink，需要避免直接通过 Led_Ctrl_Init(LightFunc_Blink)的调用形式来实现。
+> 正确的做法是：在车型专属文件中定义一个“配置说明书”（CarModelConfig），然后在 Main 函数中根据当前车型选择注入哪份说明书。
+>
+> A. 扩展性：防止“接口大改”
+> 如果明年新车型需求增加了：不仅要选灯效，还要设置灯的颜色和闪烁周期。
+>
+> - 直接传函数（差方案）： 你得修改 Led_Ctrl_Init 的参数，变成 Init(func, color, period)。这会导致所有引用过这个函数的地方都要改，甚至导致底层库重新编译。
+> - 传结构体（好方案）： 你只需要在 CarModelConfig 结构体里加个成员。Led_Ctrl_Init(config) 的函数签名永远不变。这叫“对修改关闭”。
+>
+> B. 属性关联性
+> 一个车型不仅仅是一个动作，它是一组属性的集合。通过结构体，我们可以把属于“豪华车”的所有参数打包在一起。这就好比你去面试，不是只带“会写代码”这一项技能，而是带一份“简历（结构体）”，里面包含了你的姓名、技能、工作经验。
+>
+> C. 内存与安全性（ROM化）
+> 在汽车电子（如英飞凌 TC4）开发中，这些配置通常被定义为 static const，这意味着它们会被存放在 Flash（只读存储器） 中。 通过传递指针，Led_Ctrl 只是“引用”了这份存在 Flash 里的只读说明书，既节省了昂贵的 RAM 空间，又防止了配置信息被意外修改。
+
+> 这种“在初始化时选择参数”的行为，在设计模式中叫 依赖注入 (Dependency Injection)。
+>
+> - Led_Ctrl 模块：它是一个“通用的执行引擎”，它内部是空的，没有灵魂。
+> - Led_Ctrl_Init()：它是一个“注入孔”。
+> - LuxuryCarConfig：它是“灵魂/配置”。
+>
+> 这种“决定权的上移”，正是架构设计的精髓：让底层的零件尽量通用，让高层的逻辑决定组合方式。
+> 当新增相关需求时，增加的只有 Fun/ 下的算法插件和 Cfg/ 下的车型表。其他代码都不需要修改。
+
+```c
+
+// 1. 先定义好不同车型的“配置说明书”（通常放在 Cfg 层）
+const CarModelConfig LuxuryCarConfig = { .activeEffect = LightFunc_Blink };
+const CarModelConfig BasicCarConfig  = { .activeEffect = LightFunc_AlwaysOn };
+
+// 2. 在程序启动（Main函数）时，根据当前车型选择注入哪份说明书
+void core0_main(void) {
+    // 如果这台车是豪华版，就传入豪华版的配置指针
+    Led_Ctrl_Init(&LuxuryCarConfig);
+
+    while(1) {
+        Led_Ctrl_Handle();
+    }
+}
+
+```
