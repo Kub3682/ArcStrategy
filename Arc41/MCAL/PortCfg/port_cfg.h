@@ -7,6 +7,7 @@
 /*********************************************************************************************************************/
 
 #include "IfxPort.h"
+#include "lightfun.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -19,6 +20,25 @@
 //#define BUTTON_PIN   11U
 
 #define LED1     &MODULE_P33, 0             /* Port pin for the LED     */
+#define LED2     &MODULE_P33, 1             /* Port pin for the LED     */
+#define LED3     &MODULE_P33, 4             /* Port pin for the LED     */
+#define LED4     &MODULE_P33, 5             /* Port pin for the LED     */
+#define LED5     &MODULE_P13, 0             /* Port pin for the LED     */
+#define LED6     &MODULE_P13, 1             /* Port pin for the LED     */
+#define LED7     &MODULE_P13, 2             /* Port pin for the LED     */
+#define LED8     &MODULE_P13, 3             /* Port pin for the LED     */
+#define LED_INVALID   NULL, 0  /* 无效LED标记（填充空元素） */
+//#define LED1   ((LEDConfig){&MODULE_P33, 0})  /* Port pin for LED1 */
+//#define LED2   ((LEDConfig){&MODULE_P33, 1})  /* Port pin for LED2 */
+//#define LED3   ((LEDConfig){&MODULE_P33, 4})  /* Port pin for LED3 */
+//#define LED4   ((LEDConfig){&MODULE_P33, 5})  /* Port pin for LED4 */
+//#define LED5   ((LEDConfig){&MODULE_P13, 0})  /* Port pin for LED5 */
+//#define LED6   ((LEDConfig){&MODULE_P13, 1})  /* Port pin for LED6 */
+//#define LED7   ((LEDConfig){&MODULE_P13, 2})  /* Port pin for LED7 */
+//#define LED8   ((LEDConfig){&MODULE_P13, 3})  /* Port pin for LED8 */
+//#define LED_INVALID   ((LEDConfig){NULL, 0})  /* 无效LED标记（填充空元素） */
+
+
 #define BUTTON   &MODULE_P33, 11            /* Port pin for the button  */
 
 // Port配置函数声明（初始化引脚硬件模式）

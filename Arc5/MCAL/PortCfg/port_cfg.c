@@ -59,8 +59,7 @@
 
 // 结合项目的系统-硬件框图以及 芯片硬件引脚映射表，在此文件中实现对各个引脚的硬件功能模式配置
 // Port驱动核心职责：配置引脚硬件模式（对应AUTOSAR Port_SetPinMode功能）
-void Port_Cfg_Init(void)
-{
+void Port_Cfg_Init(void){
 
     // 配置LED1为GPIO推挽输出（硬件功能模式配置）
     //IfxPort_setPinMode(LED1_PORT, LED1_PIN, IfxPort_Mode_outputPushPullGeneral);
@@ -90,6 +89,7 @@ void initMulticoreAPSet(void)
     port_accen_wra.U |= (1 << IfxApProt_TagId_cpu2d) | (1 << IfxApProt_TagId_cpu2ds);
     port_accen_wra.U |= (1 << IfxApProt_TagId_cbs);
     IfxApApu_configWriteRegA((Ifx_ACCEN_ACCEN_WRA *)LEDA_PORT.ACCGRP[ACCESS_GRP].WRA, port_accen_wra.U);
+    IfxApApu_configWriteRegA((Ifx_ACCEN_ACCEN_WRA *)LEDB_PORT.ACCGRP[ACCESS_GRP].WRA, port_accen_wra.U);
     //IfxPort_setApuGroupSelection(LED1, ACCESS_GRP);
     //IfxPort_setApuGroupSelection(LED2, ACCESS_GRP);
 

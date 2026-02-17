@@ -70,7 +70,7 @@ void core1_main(void)
         else g_cpu1_run_count = 10;
 
         // LED2点亮
-        IfxPort_setPinState(LED2, IfxPort_State_low);
+        //IfxPort_setPinState(LED2, IfxPort_State_low);
 
 
     }

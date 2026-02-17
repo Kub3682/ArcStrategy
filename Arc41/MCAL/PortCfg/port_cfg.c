@@ -31,6 +31,10 @@
 /*********************************************************************************************************************/
 
 #include "port_cfg.h"
+#include "Ifx_Types.h"
+#include "IfxPort.h"
+#include "Bsp.h"
+//#include "kit_tc469_std_trb.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -61,6 +65,13 @@ void Port_Cfg_Init(void)
     // 配置LED1为GPIO推挽输出（硬件功能模式配置）
     //IfxPort_setPinMode(LED1_PORT, LED1_PIN, IfxPort_Mode_outputPushPullGeneral);
     IfxPort_setPinMode(LED1, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED2, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED3, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED4, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED5, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED6, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED7, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED8, IfxPort_Mode_outputPushPullGeneral);
 
     // 配置BUTTON为GPIO上拉输入（硬件电气特性配置，对应[SWS_Port_00081]）
     //IfxPort_setPinMode(BUTTON_PORT, BUTTON_PIN, IfxPort_Mode_inputPullUp);

@@ -16,10 +16,27 @@ void Led_Ctrl_Init(const CarModelConfig* config) {
     Led_DD_SetIniState(DIO_STATE_HIGH);  // 初始状态为高电平
 }
 
+/*
 void Led_Ctrl_Handle(void) {
     if(g_currentConfig && g_currentConfig->activeEffect) {
         // 调用配置中指定的函数指针，如果 g_currentConfig 是 NULL，if 条件为假，代码就不会往下执行。
         //这保证了模块在“未注入灵魂（未初始化）”的情况下，能够安全地保持静默，而不是胡乱运行。
         controlLight(g_currentConfig->activeEffect);
     }
+}
+*/
+
+void Led_Ctrl_Handle(void) {
+    if (g_currentConfig == NULL || g_currentConfig->lightCount == 0) {
+        return; // 保留安全校验
+    }
+
+     // 遍历每个灯型，执行对应灯效（差异化控制）
+    for (uint8_t i = 0; i < g_currentConfig->lightCount; i++) {
+        const LightTypeConfigItem* currentLight = &g_currentConfig->lights[i];
+        if (currentLight->activeEffect != NULL) {
+            controlLight(currentLight, currentLight->activeEffect);
+        }
+    }
+
 }
