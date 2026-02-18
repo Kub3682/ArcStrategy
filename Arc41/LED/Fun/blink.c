@@ -16,10 +16,16 @@ static void DelayMs(uint32_t ms)
 void LightFunc_Blink(const LightTypeConfigItem* light)
 {
     // 亮200ms
-    Led_DD_SetState(light, DIO_STATE_LOW);
+    //Led_DD_SetState(light, DIO_STATE_LOW);
+    for (uint8_t i = 0; i < light->LEDCount; i++) {
+        Led_DD_SetState(light, i, DIO_STATE_LOW); // 假设低电平点亮
+    }
     DelayMs(200);
     // 灭200ms
-    Led_DD_SetState(light, DIO_STATE_HIGH);
+    //Led_DD_SetState(light, DIO_STATE_HIGH);
+        for (uint8_t i = 0; i < light->LEDCount; i++) {
+        Led_DD_SetState(light, i, DIO_STATE_HIGH); // 假设低电平点亮
+    }
     DelayMs(200);
 }
 

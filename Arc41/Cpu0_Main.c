@@ -63,7 +63,8 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
     
     // 2. LED模块初始化（集成工程师仅需调用接口，同时确认关键配置型号，无需关心内部逻辑）
     //Led_Ctrl_Init();
-    Led_Ctrl_Init(&LuxuryCarConfig);
+    Led_Ctrl_Init(&FashionableCarConfig);
+    //Led_Ctrl_Init(&BasicCarConfig);
 
     // 3. 主循环：调度LED业务逻辑（集成工程师仅需调用接口，无需关心内部逻辑）
     while(1)

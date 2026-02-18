@@ -1,6 +1,7 @@
 /* led_cfg.c */
 #include "led_cfg.h"
 #include "blink.h"
+#include "circularflow.h"
 #include "alwayson.h"
 #include "port_cfg.h"
 
@@ -15,7 +16,7 @@ const CarModelConfig BasicCarConfig = {
         {
             .lightTypeName = "BrakeLight",
             .LEDCount = 1,
-            .LEDList = {LED1, LED_INVALID, LED_INVALID, LED_INVALID, 
+            .LEDList = {LED1, LED_INVALID, LED_INVALID, LED_INVALID,
                         LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
             .activeEffect = LightFunc_AlwaysOn
         },
@@ -23,7 +24,7 @@ const CarModelConfig BasicCarConfig = {
         {
             .lightTypeName = "TurnSignalLight",
             .LEDCount = 1,
-            .LEDList = {LED2, LED_INVALID, LED_INVALID, LED_INVALID, 
+            .LEDList = {LED2, LED_INVALID, LED_INVALID, LED_INVALID,
                         LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
             .activeEffect = LightFunc_Blink
         },
@@ -64,6 +65,39 @@ const CarModelConfig LuxuryCarConfig = {
         },*/
         // 剩余3个灯型位置：填充无效值
         {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL}
+    }
+};
+
+const CarModelConfig FashionableCarConfig = {
+    .lightCount = 3,  // 豪华车型共2种灯型
+    .lights = {
+        // 第1个灯型：刹车灯（3个LED，LED1-LED3，常亮）
+        {
+            .lightTypeName = "TurnSignalLight",
+            .LEDCount = 1,
+            .LEDList = {LED2, LED_INVALID, LED_INVALID, LED_INVALID,
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_Blink
+        },
+        // 第2个灯型：转向灯（4个LED，LED5-LED8，频闪）
+        {
+            .lightTypeName = "BrakeLight",
+            .LEDCount = 1,
+            .LEDList = {LED1, LED_INVALID, LED_INVALID, LED_INVALID,
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_AlwaysOn
+        },
+        // 第3个灯型：氛围灯（6个LED，LED3-LED8，流水式）
+        {
+            .lightTypeName = "AmbientLight",
+            .LEDCount = 6,
+            .LEDList = {LED3, LED4, LED5, LED6, LED7, LED8,
+                        LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_CircularFlow
+        },
+        // 剩余3个灯型位置：填充无效值
         {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
         {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL}
     }

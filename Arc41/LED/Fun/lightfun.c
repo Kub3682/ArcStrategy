@@ -34,6 +34,7 @@ void controlLight(const LightTypeConfigItem* light, LightFunc func) {
         else // 按键松开
         {
             // 熄灭LED
-            Led_DD_SetState(light, DIO_STATE_HIGH);
+            //Led_DD_SetState(light, DIO_STATE_HIGH);
+            Led_DD_SetIniState(DIO_STATE_HIGH);
         }
 }

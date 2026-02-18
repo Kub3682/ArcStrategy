@@ -12,5 +12,8 @@
 
 void LightFunc_AlwaysOn(const LightTypeConfigItem* light) {
     // 仅控制当前灯型的LED常亮（而非全局）
-    Led_DD_SetState(light, DIO_STATE_LOW); // 假设低电平点亮
+    //Led_DD_SetState(light, DIO_STATE_LOW); // 假设低电平点亮
+    for (uint8_t i = 0; i < light->LEDCount; i++) {
+        Led_DD_SetState(light, i, DIO_STATE_LOW); // 假设低电平点亮
+    }
 }
