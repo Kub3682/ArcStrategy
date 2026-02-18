@@ -71,7 +71,8 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
         Led_Ctrl_Handle(); // 调用业务逻辑模块
     }
 
-
+//前 Port_Cfg_Init 和 Led_Ctrl_Init 的先后顺序依赖于 main.c 里的手动排序。
+//后续可引入一个 EcuM (ECU State Manager) 模块，统一管理各层级的初始化序列（Power-up -> MCU Init -> Port Init -> Driver Init -> App Init）。
 
 
 

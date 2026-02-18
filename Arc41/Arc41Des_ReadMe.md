@@ -141,3 +141,58 @@ void core0_main(void)
 }
 
 ```
+
+以上，配置化还能进一步设计为：
+典型的“查表法”。通过数组和结构体描述车型差异（灯的数量、Pin 脚映射、效果），这极大增加灵活性以及降低了变体管理（Variant Management）的难度。
+
+如：
+
+```c
+
+// 极简版LEDConfig：仅封装MCAL层的端口+引脚，无多余字段
+typedef struct {
+    Ifx_P* port;  // 对应宏中的&MODULE_P33
+    uint8_t pin;  // 对应宏中的0/1/4等
+} LEDConfig;
+
+
+// 灯型完整配置（灯型+硬件+灯效）
+typedef struct LightTypeConfigItem {
+    const char* lightTypeName;      // 灯型名称（如"BrakeLight"）
+    uint8_t LEDCount; // LED数量
+    LEDConfig LEDList[8]; // LED列表(对应MCAL里的LED配置)，暂先固定长度8,   #include "port_cfg.h"
+    LightFunc activeEffect; // 当前车型选用的灯效策略
+} LightTypeConfigItem;
+
+// 车型完整配置（灯光配置+车型）
+typedef struct {
+    uint8_t lightCount;
+    LightTypeConfigItem lights[5]; // 暂先固定长度5
+} CarModelConfig;
+
+
+```
+
+这样，在车型专属文件中，只需要定义一个“车型配置”（CarModelConfig），然后在 Main 函数中根据当前车型选择注入哪份说明书。
+
+## 当前架构问题与局限性：
+
+### 存在的问题与风险
+
+阻塞型设计 (Blocking Code): blink.c 中使用了 DelayMs（忙等）。在单线程 CPU 架构中，这会导致 Led_Ctrl_Handle 锁死，无法处理其他并发任务（如通信或按键响应）。
+
+接口定义的循环依赖隐患: led_cfg.h 包含了 led_ctrl.h，而 led_ctrl.h 又包含 lightfun.h。虽然目前使用了 ifndef 保护，但层级耦合较重。
+
+内存空间浪费: LightTypeConfigItem 中的 LEDList[8] 和 CarModelConfig 中的 lights[5] 使用固定长度。在资源极度受限的 MCU 中，这种为了对齐而做的冗余配置会占用较多 Flash/RAM。
+
+防御性编程不足: 数组遍历时主要依赖 lightCount，若配置数据出错（如 lightCount 填错），可能导致非法内存访问。
+下一步的演进重点还可放在实时性优化（去阻塞）和内存管理精细化上。
+
+### 存在的局限性
+
+当前的架构（Arc41）在单核环境下表现优秀，但在多核（Multicore）系统中存在显著的局限性。
+从多核并行、负载均衡、异构核心支持及软件工程原则（如开闭原则）出发，引出如下待优化设计点：
+
+1. 全局配置锁定：g_currentConfig 是一个静态全局变量。在多核环境下，多个核心同时读取或初始化该变量会引发一致性问题，无法支持“不同核心加载不同配置”的并行需求。
+2. Led_Ctrl_Handle 是一个粗粒度的遍历函数，它在当前核心上一次性处理所有灯型。这使得任务无法根据核心负载进行动态拆分或静态绑定。
+3. LightFunc_Blink 中的 DelayMs（忙等）在多核系统中尤为致命。它不仅白白浪费当前核心的算力，还可能因为持有某些共享资源的锁而导致其他核心长时间等待。

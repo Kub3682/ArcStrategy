@@ -99,10 +99,73 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
 #include "led_cfg.h"
 #include "blink.h"
 #include "alwayson.h"
+#include "port_cfg.h"
 
-// 建议增加 static 或 const 限制
-const CarModelConfig LuxuryCarConfig = { .activeEffect = LightFunc_Blink };
-const CarModelConfig BasicCarConfig  = { .activeEffect = LightFunc_AlwaysOn };
+
+//const CarModelConfig LuxuryCarConfig = { .activeEffect = LightFunc_Blink };
+//const CarModelConfig BasicCarConfig  = { .activeEffect = LightFunc_AlwaysOn };
+
+const CarModelConfig BasicCarConfig = {
+    .lightCount = 2,  // 标配车型共2种灯型
+    .lights = {
+        // 第1个灯型：刹车灯（1个LED，LED1，常亮）
+        {
+            .lightTypeName = "BrakeLight",
+            .LEDCount = 1,
+            .LEDList = {LED1, LED_INVALID, LED_INVALID, LED_INVALID, 
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_AlwaysOn
+        },
+        // 第2个灯型：转向灯（1个LED，LED2，频闪）
+        {
+            .lightTypeName = "TurnSignalLight",
+            .LEDCount = 1,
+            .LEDList = {LED2, LED_INVALID, LED_INVALID, LED_INVALID, 
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_Blink
+        },
+        // 剩余灯型位置（固定长度5）：填充无效值（不影响使用）
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL}
+    }
+};
+
+// -------------------------- 标配车型配置（2种灯型） --------------------------
+const CarModelConfig LuxuryCarConfig = {
+    .lightCount = 2,  // 豪华车型共2种灯型
+    .lights = {
+        // 第1个灯型：刹车灯（3个LED，LED1-LED3，常亮）
+        {
+            .lightTypeName = "BrakeLight",
+            .LEDCount = 3,
+            .LEDList = {LED1, LED2, LED3, LED_INVALID, 
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_AlwaysOn
+        },
+        // 第2个灯型：转向灯（4个LED，LED5-LED8，频闪）
+        {
+            .lightTypeName = "TurnSignalLight",
+            .LEDCount = 4,
+            .LEDList = {LED5, LED6, LED7, LED8, 
+                        LED_INVALID, LED_INVALID, LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_Blink
+        },
+        // 第3个灯型：氛围灯（6个LED，LED3-LED8，流水式）
+        /*{
+            .lightTypeName = "AmbientLight",
+            .LEDCount = 6,
+            .LEDList = {LED3, LED4, LED5, LED6, LED7, LED8, 
+                        LED_INVALID, LED_INVALID},
+            .activeEffect = LightFunc_WaterFlow
+        },*/
+        // 剩余3个灯型位置：填充无效值
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL},
+        {.lightTypeName = NULL, .LEDCount = 0, .LEDList = {LED_INVALID}, .activeEffect = NULL}
+    }
+};
+
 ```
 
 ---
@@ -137,9 +200,10 @@ static const CarModelConfig* g_currentConfig = NULL; //初始值：NULL 是 C �
 //通过赋值为 NULL，强制要求系统必须显式地经过 Init 过程。
 void Led_Ctrl_Init(const CarModelConfig* config) {
     g_currentConfig = config;
-    Led_DD_SetState(DIO_STATE_HIGH);  // 初始状态为高电平
+    Led_DD_SetIniState(DIO_STATE_HIGH);  // 初始状态为高电平
 }
 
+/*
 void Led_Ctrl_Handle(void) {
     if(g_currentConfig && g_currentConfig->activeEffect) {
         // 调用配置中指定的函数指针，如果 g_currentConfig 是 NULL，if 条件为假，代码就不会往下执行。
@@ -147,7 +211,22 @@ void Led_Ctrl_Handle(void) {
         controlLight(g_currentConfig->activeEffect);
     }
 }
+*/
 
+void Led_Ctrl_Handle(void) {
+    if (g_currentConfig == NULL || g_currentConfig->lightCount == 0) {
+        return; // 保留安全校验
+    }
+
+     // 遍历每个灯型，执行对应灯效（差异化控制）
+    for (uint8_t i = 0; i < g_currentConfig->lightCount; i++) {
+        const LightTypeConfigItem* currentLight = &g_currentConfig->lights[i];
+        if (currentLight->activeEffect != NULL) {
+            controlLight(currentLight, currentLight->activeEffect);
+        }
+    }
+
+}
 ```
 
 ---
@@ -158,17 +237,31 @@ void Led_Ctrl_Handle(void) {
 #ifndef LED_CTRL_H
 #define LED_CTRL_H
 
-
+#include "port_cfg.h"
 #include "lightfun.h"
+
+
 /**
  * LED模块初始化接口
  * 包含LED初始状态设置、硬件适配等所有LED初始化逻辑
  * 供集成工程师调用，无需关心内部实现
  */
 
+
+/*
 typedef struct {
+    LightType activeType; // 当前激活的LED类型
     LightFunc activeEffect; // 当前车型选用的灯效策略
 } CarModelConfig;
+*/
+
+
+// 车型完整配置（灯光配置+车型）
+typedef struct {
+    uint8_t lightCount;
+    LightTypeConfigItem lights[5]; // 暂先固定长度5
+} CarModelConfig;
+
 
 void Led_Ctrl_Init(const CarModelConfig* config);
 
@@ -176,6 +269,7 @@ void Led_Ctrl_Init(const CarModelConfig* config);
 void Led_Ctrl_Handle(void);
 
 #endif /* LED_CTRL_H */
+
 ```
 
 ---
@@ -187,17 +281,42 @@ void Led_Ctrl_Handle(void);
 #include "dio.h"
 #include "port_cfg.h"
 
-// 设置LED状态（封装Dio_WritePin）
-void Led_DD_SetState(Dio_StateType state)
+// 设置LED初始状态（封装Dio_WritePin）
+void Led_DD_SetIniState(Dio_StateType state)
 {
     Dio_WritePin(LED1, state);
+    Dio_WritePin(LED2, state);
+    Dio_WritePin(LED3, state);
+    Dio_WritePin(LED4, state);
+    Dio_WritePin(LED5, state);
+    Dio_WritePin(LED6, state);
+    Dio_WritePin(LED7, state);
+    Dio_WritePin(LED8, state);
 }
+
+// 设置LED状态（封装Dio_WritePin）
+void Led_DD_SetState(const LightTypeConfigItem* light, Dio_StateType state) {
+    if (light == NULL || light->LEDCount == 0) return;
+
+    // 遍历当前灯型的所有有效LED
+    for (uint8_t i = 0; i < light->LEDCount; i++) {
+        const LEDConfig* led = &light->LEDList[i];
+        // 校验无效LED，避免硬件异常
+        if (led->port == NULL) continue;
+        // 正确传参：port + pin
+        Dio_WritePin(led->port, led->pin, state);
+    }
+}
+
+
+
 
 // 读取按键状态（封装Dio_ReadPin）
 Dio_StateType Led_DD_ReadButton(void)
 {
     return Dio_ReadPin(BUTTON);
 }
+
 ```
 
 ---
@@ -212,12 +331,16 @@ Dio_StateType Led_DD_ReadButton(void)
 #include "dio_types.h"
 #include "port_cfg.h"
 
+
+
 // 封装DIO接口为LED专用函数（屏蔽DIO的端口/引脚细节）
 // 作用：让上层（ctrl/fun）无需关心硬件引脚，仅调用LED专用接口
-void Led_DD_SetState(Dio_StateType state);  // 设置LED状态
+void Led_DD_SetIniState(Dio_StateType state);  // 设置LED初始状态
+void Led_DD_SetState(const LightTypeConfigItem* light, Dio_StateType state);  // 设置LED状态
 Dio_StateType Led_DD_ReadButton(void);       // 读取按键状态
 
 #endif /* LED_DD_H */
+
 ```
 
 ---
@@ -231,9 +354,15 @@ Dio_StateType Led_DD_ReadButton(void);       // 读取按键状态
 
 // 常亮灯效实现（仅依赖led_dd的抽象接口）
 
-void LightFunc_AlwaysOn(void)
+/*void LightFunc_AlwaysOn(void)
 {
     Led_DD_SetState(DIO_STATE_LOW);
+}
+*/
+
+void LightFunc_AlwaysOn(const LightTypeConfigItem* light) {
+    // 仅控制当前灯型的LED常亮（而非全局）
+    Led_DD_SetState(light, DIO_STATE_LOW); // 假设低电平点亮
 }
 
 ```
@@ -249,7 +378,8 @@ void LightFunc_AlwaysOn(void)
 #include "lightfun.h"
 
 // 常亮灯效函数声明（适配LightFunc类型）
-void LightFunc_AlwaysOn(void);
+//void LightFunc_AlwaysOn(void);
+void LightFunc_AlwaysOn(const LightTypeConfigItem* light);
 
 #endif /* ALWAYSON_H */
 ```
@@ -274,13 +404,13 @@ static void DelayMs(uint32_t ms)
 
 // 闪烁灯效实现（仅依赖led_dd的抽象接口）
 
-void LightFunc_Blink(void)
+void LightFunc_Blink(const LightTypeConfigItem* light)
 {
     // 亮200ms
-    Led_DD_SetState(DIO_STATE_LOW);
+    Led_DD_SetState(light, DIO_STATE_LOW);
     DelayMs(200);
     // 灭200ms
-    Led_DD_SetState(DIO_STATE_HIGH);
+    Led_DD_SetState(light, DIO_STATE_HIGH);
     DelayMs(200);
 }
 
@@ -300,7 +430,7 @@ void LightFunc_Blink(void)
 #include "lightfun.h"
 
 // 闪烁灯效函数声明（适配LightFunc类型）
-void LightFunc_Blink(void);
+void LightFunc_Blink(const LightTypeConfigItem* light);
 
 #endif /* BLINK_H */
 ```
@@ -315,7 +445,7 @@ void LightFunc_Blink(void);
 #include "dio_types.h"
 
 
-void controlLight(LightFunc func)
+/*void controlLight(LightFunc func)
 {
     // 读取按键状态
     uint8_t btnState = Led_DD_ReadButton();
@@ -330,6 +460,25 @@ void controlLight(LightFunc func)
         Led_DD_SetState(DIO_STATE_HIGH);
     }
 }
+*/
+
+// 辅助函数：执行单个灯效（绑定灯型，解决上下文问题）
+void controlLight(const LightTypeConfigItem* light, LightFunc func) {
+    if (light == NULL || func == NULL) return;
+    // 读取按键状态
+        uint8_t btnState = Led_DD_ReadButton();
+        if(btnState == DIO_STATE_LOW) // 按键按下
+        {
+            // 把灯型配置传给灯效函数，让灯效知道控制哪些LED
+            // 需先修改LightFunc类型为：typedef void (*LightFunc)(const LightTypeConfigItem*);
+            func(light);
+        }
+        else // 按键松开
+        {
+            // 熄灭LED
+            Led_DD_SetState(light, DIO_STATE_HIGH);
+        }
+}
 
 ```
 
@@ -342,12 +491,37 @@ void controlLight(LightFunc func)
 #define LIGHTFUN_H
 
 
+#include "port_cfg.h"
+#include "stdint.h"
+
+// 作用：让后续的LightFunc定义能识别LightTypeConfigItem，无需等完整定义
+typedef struct LightTypeConfigItem LightTypeConfigItem;
 
 // 灯效函数指针类型（抽象“灯效行为”）
 // 作用：让控制层（ctrl）仅依赖抽象接口，不依赖具体灯效实现
-typedef void (*LightFunc)(void);
+typedef void (*LightFunc)(const LightTypeConfigItem*);
 
-void controlLight(LightFunc func);
+
+
+// 极简版LEDConfig：仅封装MCAL层的端口+引脚，无多余字段
+typedef struct {
+    Ifx_P* port;  // 对应宏中的&MODULE_P33
+    uint8_t pin;  // 对应宏中的0/1/4等
+} LEDConfig;
+
+
+// 灯型完整配置（灯型+硬件+灯效）
+typedef struct LightTypeConfigItem {
+    const char* lightTypeName;      // 灯型名称（如"BrakeLight"）
+    uint8_t LEDCount; // LED数量
+    LEDConfig LEDList[8]; // LED列表(对应MCAL里的LED配置)，暂先固定长度8,   #include "port_cfg.h"
+    LightFunc activeEffect; // 当前车型选用的灯效策略
+} LightTypeConfigItem;
+
+
+
+//void controlLight(LightFunc func);
+void controlLight(const LightTypeConfigItem* light, LightFunc func);
 
 #endif /* LIGHTFUN_H */
 ```
@@ -590,6 +764,10 @@ typedef enum
 /*********************************************************************************************************************/
 
 #include "port_cfg.h"
+#include "Ifx_Types.h"
+#include "IfxPort.h"
+#include "Bsp.h"
+//#include "kit_tc469_std_trb.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -620,6 +798,13 @@ void Port_Cfg_Init(void)
     // 配置LED1为GPIO推挽输出（硬件功能模式配置）
     //IfxPort_setPinMode(LED1_PORT, LED1_PIN, IfxPort_Mode_outputPushPullGeneral);
     IfxPort_setPinMode(LED1, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED2, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED3, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED4, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED5, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED6, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED7, IfxPort_Mode_outputPushPullGeneral);
+    IfxPort_setPinMode(LED8, IfxPort_Mode_outputPushPullGeneral);
 
     // 配置BUTTON为GPIO上拉输入（硬件电气特性配置，对应[SWS_Port_00081]）
     //IfxPort_setPinMode(BUTTON_PORT, BUTTON_PIN, IfxPort_Mode_inputPullUp);
@@ -643,6 +828,7 @@ void Port_Cfg_Init(void)
 /*********************************************************************************************************************/
 
 #include "IfxPort.h"
+#include "lightfun.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -655,6 +841,25 @@ void Port_Cfg_Init(void)
 //#define BUTTON_PIN   11U
 
 #define LED1     &MODULE_P33, 0             /* Port pin for the LED     */
+#define LED2     &MODULE_P33, 1             /* Port pin for the LED     */
+#define LED3     &MODULE_P33, 4             /* Port pin for the LED     */
+#define LED4     &MODULE_P33, 5             /* Port pin for the LED     */
+#define LED5     &MODULE_P13, 0             /* Port pin for the LED     */
+#define LED6     &MODULE_P13, 1             /* Port pin for the LED     */
+#define LED7     &MODULE_P13, 2             /* Port pin for the LED     */
+#define LED8     &MODULE_P13, 3             /* Port pin for the LED     */
+#define LED_INVALID   NULL, 0  /* 无效LED标记（填充空元素） */
+//#define LED1   ((LEDConfig){&MODULE_P33, 0})  /* Port pin for LED1 */
+//#define LED2   ((LEDConfig){&MODULE_P33, 1})  /* Port pin for LED2 */
+//#define LED3   ((LEDConfig){&MODULE_P33, 4})  /* Port pin for LED3 */
+//#define LED4   ((LEDConfig){&MODULE_P33, 5})  /* Port pin for LED4 */
+//#define LED5   ((LEDConfig){&MODULE_P13, 0})  /* Port pin for LED5 */
+//#define LED6   ((LEDConfig){&MODULE_P13, 1})  /* Port pin for LED6 */
+//#define LED7   ((LEDConfig){&MODULE_P13, 2})  /* Port pin for LED7 */
+//#define LED8   ((LEDConfig){&MODULE_P13, 3})  /* Port pin for LED8 */
+//#define LED_INVALID   ((LEDConfig){NULL, 0})  /* 无效LED标记（填充空元素） */
+
+
 #define BUTTON   &MODULE_P33, 11            /* Port pin for the button  */
 
 // Port配置函数声明（初始化引脚硬件模式）
