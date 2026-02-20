@@ -1,4 +1,5 @@
 #include "dio.h"
+#include "dio_types.h"
 #include "IfxPort.h"
 #include "stdint.h"
 

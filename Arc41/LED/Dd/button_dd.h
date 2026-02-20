@@ -1,5 +1,5 @@
 /**********************************************************************************************************************
- * \file dio.h
+ * \file button_dd.h
  * \copyright Copyright (C) Infineon Technologies AG 2019
  * 
  * Use of this file is subject to the terms of use agreed between (i) you or the company in which ordinary course of 
@@ -25,17 +25,20 @@
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
 
-#ifndef MCAL_DIO_DIO_H_
-#define MCAL_DIO_DIO_H_
+#ifndef LED_DD_BUTTON_DD_H_
+#define LED_DD_BUTTON_DD_H_
 
 #include "dio_types.h"
-#include "stdint.h"
-#include "IfxPort_regdef.h"
+
+typedef enum
+{
+    BUTTON_STATE_ON  = DIO_STATE_LOW,  // 低电平
+    BUTTON_STATE_OFF = DIO_STATE_HIGH   // 高电平
+} Button_StateType;
 
 
-// LED层调用的核心接口（保持要求的参数格式）
-void Dio_WritePin(Ifx_P *port, uint8_t pin, Dio_StateType state);
-Dio_StateType Dio_ReadPin(Ifx_P *port, uint8_t pin);
+Button_StateType Button_DD_ReadButton(void);       // 读取按键状态
 
 
-#endif /* MCAL_DIO_DIO_H_ */
+
+#endif /* LED_DD_BUTTON_DD_H_ */

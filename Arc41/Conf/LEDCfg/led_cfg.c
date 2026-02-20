@@ -1,13 +1,12 @@
 /* led_cfg.c */
 #include "led_cfg.h"
-#include "blink.h"
-#include "circularflow.h"
-#include "alwayson.h"
 #include "port_cfg.h"
 
+#include "alwayson.h"
+#include "blink.h"
+#include "circularflow.h"
 
-//const CarModelConfig LuxuryCarConfig = { .activeEffect = LightFunc_Blink };
-//const CarModelConfig BasicCarConfig  = { .activeEffect = LightFunc_AlwaysOn };
+
 
 const CarModelConfig BasicCarConfig = {
     .lightCount = 2,  // 标配车型共2种灯型
