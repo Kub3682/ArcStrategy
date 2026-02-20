@@ -30,7 +30,7 @@
 #include "port_cfg.h"   // Port配置接口
 #include "led_ctrl.h"
 #include "led_cfg.h"
-
+#include "multicore_resm.h"
 
 
 //IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0; // 全局变量定义，被编译器放入全局数据段 (Data/Bss Section)，IFX_ALIGN(4) 是一种编译器指令

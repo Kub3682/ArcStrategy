@@ -1,7 +1,7 @@
 /* led_cfg.c */
 #include "led_cfg.h"
 #include "port_cfg.h"
-
+#include "led_ctrl.h"
 #include "alwayson.h"
 #include "blink.h"
 #include "circularflow.h"

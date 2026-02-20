@@ -28,6 +28,9 @@
 #define LED8          &MODULE_P13, 3             /* Port pin for the LED     */
 #define LED_INVALID   NULL, 0                    /* 无效LED标记（填充空元素）       */
 
+#define LEDA_PORT    &MODULE_P33         /* Port for the LED*/
+#define LEDB_PORT    &MODULE_P13         /* Port for the LED*/
+
 
 #define BUTTON   &MODULE_P33, 11            /* Port pin for the button  */
 
