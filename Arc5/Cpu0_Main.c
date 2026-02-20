@@ -24,14 +24,10 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
-#include <Ctl/led_ctrl.h>   // LED业务逻辑接口
-#include "Ifx_Types.h"  //定义 TriCore 架构的通用数据类型（如uint8_t/uint32_t、boolean）
-#include "Ifx_Cfg.h"    //工程的全局配置头文件，包含 SSW、外设等模块的配置宏
 #include "IfxCpu.h"     //TriCore CPU 核心的寄存器 / 函数定义（如中断使能、核 ID 获取），是操作 CPU 核心功能的基础头文件。
 #include "IfxWtu.h"     //Watchdog Timer Unit（看门狗单元）的函数定义，包含看门狗的使能、禁用、喂狗等函数
-#include "IfxPort.h"
+
 #include "port_cfg.h"   // Port配置接口
-#include "dio.h"
 #include "led_ctrl.h"
 #include "led_cfg.h"
 
@@ -53,14 +49,6 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
     IfxWtu_disableCpuWatchdog(IfxWtu_getCpuWatchdogPassword());  //禁用 Core0 的 CPU 看门狗和系统安全看门狗。
     IfxWtu_disableSystemWatchdog(IfxWtu_getSystemWatchdogPassword());
     
-
-
-
-/**********************************************************************************************************************
-* User Practice
-* START
-*********************************************************************************************************************/
-
     /**
      * Core0主函数入口
      * 仅负责初始化与主循环任务调度，无底层硬件与具体应用逻辑的依赖（符合AUTOSAR分层规范）
@@ -72,8 +60,9 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
     
     // 2. LED模块初始化（集成工程师仅需调用接口，同时确认关键配置型号，无需关心内部逻辑）
     //Led_Ctrl_Init();
-    Led_Ctrl_Init(&LuxuryCarConfig);
-
+    //Led_Ctrl_Init(&BasicCarConfig);
+    //Led_Ctrl_Init(&LuxuryCarConfig);
+    Led_Ctrl_Init(&FashionableCarConfig);
 
     /* Initialize the LED and a time constant before the CPUs synchronization */
     initMulticoreAPSet();
@@ -89,13 +78,7 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
         Led_Ctrl_Handle(); // 调用业务逻辑模块
     }
 
-
-
-
-
-/**********************************************************************************************************************
-* User Practice
-* END
-*********************************************************************************************************************/
+//前 Port_Cfg_Init 和 Led_Ctrl_Init 的先后顺序依赖于 main.c 里的手动排序。
+//后续可引入一个 EcuM (ECU State Manager) 模块，统一管理各层级的初始化序列（Power-up -> MCU Init -> Port Init -> Driver Init -> App Init）。
 
 }
