@@ -55,8 +55,8 @@ void core2_main(void)
         if(btn == 0) g_cpu2_run_count = 666; // 按下按键，变量变 888
         else g_cpu2_run_count = 20;
 
-        // LED2点亮
-        //IfxPort_setPinState(LED3, IfxPort_State_low);
+        Led_Ctrl_LightHandle(2, "AmbientLight");
+
 
 
 

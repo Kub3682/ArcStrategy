@@ -39,6 +39,8 @@
 //IfxCpu_syncEvent g_cpuSyncEvent __attribute__ ((section (".bss_cpu0.migration_unlimited"))) = 0;
 IfxCpu_syncEvent g_cpuSyncEvent __attribute__ ((section (".lmudata"))) = 0;
 
+IFX_ALIGN(4) uint32 g_cpu0_run_count = 0;
+
 void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调用
 {
     IfxCpu_enableInterrupts();  //使能 Core0 的全局中断
@@ -75,7 +77,15 @@ void core0_main(void)   //Core0 的主函数入口,由 SSW 启动代码最终调
     // 3. 主循环：调度LED业务逻辑（集成工程师仅需调用接口，无需关心内部逻辑）
     while(1)
     {
-        Led_Ctrl_Handle(); // 调用业务逻辑模块
+        //Led_Ctrl_Handle(); // 调用业务逻辑模块
+        Led_Ctrl_LightHandle(0, "TurnSignalLight");
+        //Led_Ctrl_LightHandle(1, "BrakeLight");
+        //Led_Ctrl_LightHandle(2, "AmbientLight");
+
+
+        boolean btn = IfxPort_getPinState(BUTTON);
+        if(btn == 0) g_cpu0_run_count = 999; // 按下按键，变量变 888
+        else g_cpu0_run_count = 5;
     }
 
 //前 Port_Cfg_Init 和 Led_Ctrl_Init 的先后顺序依赖于 main.c 里的手动排序。

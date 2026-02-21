@@ -69,8 +69,7 @@ void core1_main(void)
         if(btn == 0) g_cpu1_run_count = 888; // 按下按键，变量变 888
         else g_cpu1_run_count = 10;
 
-        // LED2点亮
-        //IfxPort_setPinState(LED2, IfxPort_State_low);
+        Led_Ctrl_LightHandle(1, "BrakeLight");
 
 
     }

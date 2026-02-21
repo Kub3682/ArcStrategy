@@ -36,10 +36,22 @@ typedef struct {
     LightTypeConfigItem lights[5]; // 暂先固定长度5
 } CarModelConfig;
 
+// 全局配置声明（仅CPU0初始化，从核只读）
+extern const CarModelConfig* g_currentConfig;
 
 void Led_Ctrl_Init(const CarModelConfig* config);
 
 // 控制层核心函数：传入灯效函数指针，实现按键控制LED
 void Led_Ctrl_Handle(void);
+
+/**
+ * @brief 多核LED精准控制函数（下标+名称双校验）
+ * @param i 灯型在CarModelConfig->lights数组中的下标
+ * @param lightTypeName 灯型名称（如"TurnSignalLight"），用于校验
+ * @note 1. 下标i直接定位灯型，无遍历，效率高；2. 名称校验避免传错下标；3. 适配多核分工
+ */
+void Led_Ctrl_LightHandle(uint8_t i, const char* lightTypeName);
+
+
 
 #endif /* LED_CTRL_H */
